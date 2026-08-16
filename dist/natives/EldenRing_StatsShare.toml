@@ -1,0 +1,17 @@
+[discord]
+# Incoming webhook URL for the channel that should receive run summaries.
+# Leave empty to keep local tracking only.
+webhook_url = ""
+# "new" posts a fresh message each time. "edit" updates the previous message for this run.
+mode = "new"
+# Discord location images live in maps/ next to this file. PNG is preferred.
+#   maps/lands_between.png     Lands Between
+#   maps/underworld.png        Siofra / Ainsel / Deeproot
+#   maps/realm_of_shadow.png   Realm of Shadow
+
+[overlay]
+# Combo such as "alt+o", "ctrl+shift+d", or a single letter.
+toggle_hotkey = "alt+o"
+show_session_deaths = true
+# left_middle, right_middle, top_right, top_left, bottom_right, bottom_left
+anchor = "left_middle"

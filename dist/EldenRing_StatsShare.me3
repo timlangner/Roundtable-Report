@@ -1,0 +1,9 @@
+profileVersion = "v1"
+
+[[supports]]
+game = "eldenring"
+
+[[natives]]
+path = "natives/EldenRing_StatsShare.dll"
+load_early = false
+finalizer = "stats_share_shutdown"
