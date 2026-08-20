@@ -10,10 +10,13 @@ CMakeCache.txt
 *.VC.db
 *.VC.opendb
 .cache/
+.superpowers/
+docs/superpowers/
 compile_commands.json
 dist/natives/*.dll
 dist/natives/*.pdb
 dist/natives/maps/*.png
 dist/natives/maps/*.jpg
 dist/natives/maps/*.jpeg
+render_*.png
 *.log
