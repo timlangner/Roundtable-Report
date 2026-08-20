@@ -1,0 +1,17 @@
+name: Feature request
+description: Suggest an overlay or Discord summary change
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: request
+    attributes:
+      label: What do you want?
+      description: Be specific. Overlay HUD and Discord summaries are different surfaces.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: What problem does this solve for a player or a Discord channel?

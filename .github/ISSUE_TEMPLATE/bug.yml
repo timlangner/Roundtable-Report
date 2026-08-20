@@ -1,0 +1,51 @@
+name: Bug report
+description: Something in the overlay or Discord summary is wrong
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste Discord webhook URLs. Redact them from logs and screenshots.
+  - type: input
+    id: game_version
+    attributes:
+      label: Elden Ring version / patch
+      placeholder: "1.16 / app-12345678"
+    validations:
+      required: true
+  - type: dropdown
+    id: loader
+    attributes:
+      label: Loader
+      options:
+        - Elden Ring Mod Loader (Game\\mods)
+        - Mod Engine 3
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where it shows up
+      options:
+        - Overlay HUD
+        - Discord summary
+        - Both
+        - Install / launch
+    validations:
+      required: true
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened
+      description: What you expected, and what you got.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Paste from `%APPDATA%\EldenRing_StatsShare\mod.log` with any webhook URL removed.
+      render: text
