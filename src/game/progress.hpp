@@ -47,7 +47,6 @@ std::vector<std::string> merge_bosses_down(
     const std::vector<std::string>& previous, const std::vector<std::string>& current);
 std::string grace_name_from_id(uint32_t grace_id);
 std::string grace_name_from_bonfire_id(uint32_t bonfire_id);
-std::string last_boss_from_location(std::string_view location);
 const std::vector<JourneyBoss>& journey_bosses();
 bool event_flag_bit(uint32_t remainder, uint8_t packed_byte);
 

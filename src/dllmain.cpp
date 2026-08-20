@@ -3,6 +3,7 @@
 #include "discord/webhook.hpp"
 #include "overlay/dx12_hook.hpp"
 #include "overlay/hud.hpp"
+#include "game/boss_combat.hpp"
 #include "game/progress.hpp"
 #include "run/identity.hpp"
 #include "run/store.hpp"
@@ -56,11 +57,9 @@ void persist_current() {
 }
 
 void tick_once() {
-    if (!g_app.game.ready() || !g_app.game.world_ready()) {
-        g_app.game.locate();
-        if (!g_app.game.ready()) {
-            return;
-        }
+    g_app.game.locate();
+    if (!g_app.game.ready()) {
+        return;
     }
 
     LiveSnapshot live = g_app.game.read();
@@ -82,8 +81,14 @@ void tick_once() {
             if (!same_run) {
                 g_app.loaded_run_key = key;
                 g_app.baseline = {};
+                g_app.boss_combat = {};
                 if (const auto stored = load_run(mod_data_dir(), key)) {
                     g_app.current.discord_message_id = stored->discord_message_id;
+                    restore_tracker_from_snapshot(g_app.boss_combat, stored->live);
+                    live.bosses_down =
+                        merge_bosses_down(stored->live.bosses_down, live.bosses_down);
+                    g_app.boss_combat.last_deaths = live.deaths;
+                    g_app.boss_combat.prev_bosses_down = live.bosses_down;
                 } else {
                     g_app.current.discord_message_id.clear();
                 }
@@ -121,13 +126,21 @@ void tick_once() {
             if (!stats_look_valid(live.stats) && stats_look_valid(g_app.current.live.stats)) {
                 live.stats = g_app.current.live.stats;
             }
+            const std::string prev_right =
+                same_run ? g_app.current.live.last_boss_right_weapon : std::string{};
+            const std::string prev_left =
+                same_run ? g_app.current.live.last_boss_left_weapon : std::string{};
+            const std::string prev_dealt =
+                same_run ? g_app.current.live.last_boss_dealt_damage : std::string{};
+            const std::vector<std::string> prev_talismans =
+                same_run ? g_app.current.live.last_boss_talismans : std::vector<std::string>{};
             g_app.current.identity = *identity;
             g_app.current.live = live;
             session_action = note_character_presence(g_app.session, true);
             if (session_action == SessionTickAction::SessionStarted) {
                 begin_session_baseline(g_app.baseline, live.deaths, in_world);
+                clear_session_boss_best(g_app.boss_combat);
                 g_app.session_started_ms = GetTickCount64();
-                g_app.last_boss_fought.clear();
             } else {
                 refresh_session_baseline(g_app.baseline, live.deaths, in_world);
             }
@@ -135,20 +148,50 @@ void tick_once() {
                 live.session_ms = static_cast<uint32_t>(
                     GetTickCount64() - g_app.session_started_ms);
             }
-            if (live.in_boss_fight) {
-                auto hint = last_boss_from_location(live.location);
-                if (hint.empty()) {
-                    hint = live.location;
-                }
-                if (!hint.empty() && hint != "Unknown") {
-                    g_app.last_boss_fought = hint;
+            const auto combat = g_app.game.read_combat();
+            live.in_boss_fight = false;
+            for (const auto& bar : combat.bars) {
+                if (boss_handle_occupied(bar.handle)) {
+                    live.in_boss_fight = true;
+                    break;
                 }
             }
-            live.last_boss = g_app.last_boss_fought;
+            BossCombatInput input;
+            input.bars = combat.bars;
+            input.loadout = combat.loadout;
+            input.deaths = live.deaths;
+            input.bosses_down = live.bosses_down;
+            const uint32_t deaths_before = g_app.boss_combat.last_deaths;
+            const std::string last_boss_before = g_app.boss_combat.last_boss;
+            tick_boss_combat(g_app.boss_combat, input, GetTickCount64());
+            if (live.deaths > deaths_before) {
+                if (g_app.boss_combat.last_boss != last_boss_before
+                    && !g_app.boss_combat.last_boss.empty()) {
+                    log_info("last boss commit " + g_app.boss_combat.last_boss);
+                } else {
+                    log_info(
+                        "death without last-boss commit latch="
+                        + g_app.boss_combat.latch_encounter);
+                }
+            }
+            apply_best_to_snapshot(live, g_app.boss_combat);
+            live.last_boss_right_weapon = prev_right;
+            live.last_boss_left_weapon = prev_left;
+            live.last_boss_dealt_damage = prev_dealt;
+            live.last_boss_talismans = prev_talismans;
+            apply_current_loadout_to_snapshot(live, combat.loadout);
             live.session_deaths = compute_session_deaths(live.deaths, g_app.baseline.deaths_at_load);
             g_app.current.live.session_deaths = live.session_deaths;
             g_app.current.live.session_ms = live.session_ms;
+            g_app.current.live.in_boss_fight = live.in_boss_fight;
             g_app.current.live.last_boss = live.last_boss;
+            g_app.current.live.last_killed = live.last_killed;
+            g_app.current.live.last_boss_hp_pct = live.last_boss_hp_pct;
+            g_app.current.live.last_boss_right_weapon = live.last_boss_right_weapon;
+            g_app.current.live.last_boss_left_weapon = live.last_boss_left_weapon;
+            g_app.current.live.last_boss_dealt_damage = live.last_boss_dealt_damage;
+            g_app.current.live.last_boss_talismans = live.last_boss_talismans;
+            g_app.current.live.boss_death_best = live.boss_death_best;
         } else {
             live.character_loaded = false;
             g_app.current.live.character_loaded = false;

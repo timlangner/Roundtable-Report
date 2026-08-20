@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config.hpp"
+#include "game/boss_combat.hpp"
 #include "game/gamedata.hpp"
 #include "run/session_post.hpp"
 #include "run/snapshot.hpp"
@@ -18,7 +19,7 @@ struct AppState {
     SessionPostState session;
     SessionBaseline baseline;
     uint64_t session_started_ms = 0;
-    std::string last_boss_fought;
+    BossCombatTracker boss_combat;
     std::string loaded_run_key;
     std::mutex mutex;
     std::atomic<bool> running{true};

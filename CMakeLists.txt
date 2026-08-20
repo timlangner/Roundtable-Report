@@ -70,6 +70,9 @@ set(CORE_SOURCES
     src/game/offsets.cpp
     src/game/location.cpp
     src/game/progress.cpp
+    src/game/item_names.cpp
+    src/game/boss_combat.cpp
+    src/game/chr_call.cpp
     src/run/identity.cpp
     src/run/save_headers.cpp
     src/run/session_post.cpp
@@ -86,6 +89,10 @@ target_link_libraries(stats_share_core PUBLIC
 )
 target_link_libraries(stats_share_core PUBLIC bcrypt)
 target_compile_definitions(stats_share_core PUBLIC UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+
+if(MSVC)
+    set_source_files_properties(src/game/chr_call.cpp PROPERTIES COMPILE_FLAGS "/EHa")
+endif()
 
 add_library(EldenRing_StatsShare SHARED
     src/dllmain.cpp
@@ -120,6 +127,7 @@ add_executable(stats_share_tests
     tests/test_config.cpp
     tests/test_location.cpp
     tests/test_progress.cpp
+    tests/test_boss_combat.cpp
     tests/test_map_image.cpp
     tests/test_session_post.cpp
 )
@@ -141,6 +149,9 @@ add_custom_command(TARGET EldenRing_StatsShare POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/assets/maps"
         "$<TARGET_FILE_DIR:EldenRing_StatsShare>/maps"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/assets/maps"
+        "${CMAKE_SOURCE_DIR}/dist/natives/maps"
 )
 
 add_custom_command(TARGET stats_share_tests POST_BUILD

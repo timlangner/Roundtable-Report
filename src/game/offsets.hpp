@@ -45,6 +45,32 @@ struct Offsets {
     std::size_t player_ins_net = 0x10EF8;
     std::size_t position = 0x6C0;
     std::size_t map_id = 0x6D0;
+
+    // PlayerGameData -> EquipGameData -> ChrAsm (eldenring-rs / TGA).
+    std::size_t equip_game_data = 0x2B0;
+    std::size_t chr_asm = 0x70;
+    std::size_t chr_asm_arm_style = 0x08;
+    std::size_t chr_asm_left_slot = 0x0C;
+    std::size_t chr_asm_right_slot = 0x10;
+    std::size_t chr_asm_gaitem_handles = 0x24;
+    std::size_t chr_asm_param_ids = 0x7C;
+
+    // CSFeManImp (fromsoftware-rs): vftable, heap views, hud_state u8, boss bars.
+    std::size_t csfeman_menu_man = 0x18;
+    std::size_t csfeman_front_end_view = 0x20;
+    std::size_t csfeman_hud_state = 0x78;
+    std::size_t csfeman_boss_bars = 0x5BF0;
+    std::size_t boss_bar_stride = 0x20;
+    std::size_t boss_bar_display_id = 0;
+    std::size_t boss_bar_handle = 0x08;
+    int boss_bar_count = 3;
+
+    // ChrIns via GetChrInsFromHandle.
+    std::size_t chr_npc_param = 0x60;
+    std::size_t chr_modules = 0x190;
+    std::size_t stat_module = 0x00;
+    std::size_t stat_hp = 0x138;
+    std::size_t stat_hp_max = 0x13C;
 };
 
 struct AobPattern {
@@ -62,5 +88,7 @@ const std::vector<AobPattern>& gamedataman_patterns();
 const std::vector<AobPattern>& worldchrman_patterns();
 const std::vector<AobPattern>& gameman_patterns();
 const std::vector<AobPattern>& eventflag_patterns();
+const std::vector<AobPattern>& csfeman_patterns();
+const std::vector<AobPattern>& get_chr_ins_from_handle_patterns();
 
 }  // namespace erstats

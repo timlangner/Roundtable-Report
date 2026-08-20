@@ -43,4 +43,31 @@ const std::vector<AobPattern>& eventflag_patterns() {
     return kPatterns;
 }
 
+const std::vector<AobPattern>& csfeman_patterns() {
+    static const std::vector<AobPattern> kPatterns = {
+        {"posturebar_csfeman_long",
+         "48 8B 0D ?? ?? ?? ?? 8B DA 48 85 C9 75 ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 4C 8B C8 "
+         "4C 8D 05 ?? ?? ?? ?? BA B4 00 00 00 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8B 0D ?? ?? ?? ?? "
+         "8B D3 E8 ?? ?? ?? ?? 48 8B D8",
+         3,
+         7},
+        // Ambiguous prefix of the unique pattern. Only used if the long AOB is
+        // absent; never preferred over a unique hit with a still-null instance.
+        {"posturebar_csfeman",
+         "48 8B 0D ?? ?? ?? ?? 8B DA 48 85 C9 75 ?? 48 8D 0D", 3, 7},
+    };
+    return kPatterns;
+}
+
+const std::vector<AobPattern>& get_chr_ins_from_handle_patterns() {
+    // Function entry, not a RIP pointer. rel32/instruction_size unused.
+    static const std::vector<AobPattern> kPatterns = {
+        {"posturebar_get_chr_ins",
+         "48 83 EC 28 E8 17 FF FF FF 48 85 C0 74 08 48 8B 00 48 83 C4 28 C3", 0, 0},
+        {"get_chr_ins_call_wild",
+         "48 83 EC 28 E8 ?? ?? ?? ?? 48 85 C0 74 08 48 8B 00 48 83 C4 28 C3", 0, 0},
+    };
+    return kPatterns;
+}
+
 }  // namespace erstats

@@ -25,6 +25,13 @@ TEST_CASE("snapshot json roundtrip keeps run identity") {
     snap.live.flasks = {8, 4, true};
     snap.live.last_grace = "The First Step";
     snap.live.last_boss = "Soldier of Godrick";
+    snap.live.last_killed = "Soldier of Godrick";
+    snap.live.last_boss_hp_pct = 20;
+    snap.live.last_boss_right_weapon = "Claymore +0";
+    snap.live.last_boss_dealt_damage = "Claymore +0";
+    snap.live.last_boss_talismans = {"Radagon's Soreseal"};
+    snap.live.boss_death_best["Soldier of Godrick"] = BossDeathRecord{
+        "Soldier of Godrick", 20, "Claymore +0", "", "Claymore +0", {"Radagon's Soreseal"}};
     snap.live.bosses_down = {"Soldier of Godrick"};
     snap.discord_message_id = "msg-1";
     snap.updated_at = "2026-08-16T00:00:00Z";
@@ -42,6 +49,11 @@ TEST_CASE("snapshot json roundtrip keeps run identity") {
     REQUIRE(parsed->live.flasks.charges == 8);
     REQUIRE(parsed->live.last_grace == "The First Step");
     REQUIRE(parsed->live.last_boss == "Soldier of Godrick");
+    REQUIRE(parsed->live.last_killed == "Soldier of Godrick");
+    REQUIRE(parsed->live.last_boss_hp_pct == 20);
+    REQUIRE(parsed->live.last_boss_right_weapon == "Claymore +0");
+    REQUIRE(parsed->live.last_boss_talismans.size() == 1);
+    REQUIRE(parsed->live.boss_death_best.at("Soldier of Godrick").hp_pct == 20);
     REQUIRE(parsed->live.bosses_down.size() == 1);
     REQUIRE(parsed->discord_message_id == "msg-1");
 }

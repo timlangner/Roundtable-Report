@@ -156,12 +156,6 @@ TEST_CASE("boss list stays readable in a Discord field") {
     REQUIRE(many.find("\xE2\x80\x94") == std::string::npos);
 }
 
-TEST_CASE("last boss hint uses the current region when the fight is unique") {
-    REQUIRE(last_boss_from_location("Academy of Raya Lucaria") == "Rennala, Queen of the Full Moon");
-    REQUIRE(last_boss_from_location("Stormveil Castle") == "Stormveil Castle");
-    REQUIRE(last_boss_from_location("Unknown").empty());
-}
-
 TEST_CASE("event flag bit matches FromSoftware packing") {
     REQUIRE(event_flag_bit(0, 0x80));
     REQUIRE_FALSE(event_flag_bit(0, 0x01));

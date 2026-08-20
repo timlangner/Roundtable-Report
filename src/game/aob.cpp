@@ -56,12 +56,16 @@ CompiledPattern compile_ida_pattern(std::string_view ida) {
     return out;
 }
 
-std::optional<size_t> find_pattern(std::span<const uint8_t> haystack, const CompiledPattern& pattern) {
+std::optional<size_t> find_pattern_from(
+    std::span<const uint8_t> haystack, const CompiledPattern& pattern, size_t start) {
     if (pattern.bytes.empty() || haystack.size() < pattern.bytes.size()) {
         return std::nullopt;
     }
     const size_t last = haystack.size() - pattern.bytes.size();
-    for (size_t i = 0; i <= last; ++i) {
+    if (start > last) {
+        return std::nullopt;
+    }
+    for (size_t i = start; i <= last; ++i) {
         bool ok = true;
         for (size_t j = 0; j < pattern.bytes.size(); ++j) {
             if (pattern.mask[j] && haystack[i + j] != pattern.bytes[j]) {
@@ -74,6 +78,10 @@ std::optional<size_t> find_pattern(std::span<const uint8_t> haystack, const Comp
         }
     }
     return std::nullopt;
+}
+
+std::optional<size_t> find_pattern(std::span<const uint8_t> haystack, const CompiledPattern& pattern) {
+    return find_pattern_from(haystack, pattern, 0);
 }
 
 std::optional<uintptr_t> resolve_rel32(
@@ -107,6 +115,16 @@ std::optional<uintptr_t> find_rip_pointer(
         return std::nullopt;
     }
     return resolve_rel32(haystack, *match, rel32_offset, instruction_size, buffer_base);
+}
+
+std::optional<uintptr_t> find_function(
+    std::span<const uint8_t> haystack, std::string_view ida, uintptr_t buffer_base) {
+    const auto compiled = compile_ida_pattern(ida);
+    const auto match = find_pattern(haystack, compiled);
+    if (!match) {
+        return std::nullopt;
+    }
+    return buffer_base + *match;
 }
 
 }  // namespace erstats

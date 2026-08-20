@@ -3,10 +3,21 @@
 #include "game/progress.hpp"
 
 #include <cstdint>
+#include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
 namespace erstats {
+
+struct BossDeathRecord {
+    std::string encounter;
+    std::optional<uint8_t> hp_pct;
+    std::string right_weapon;
+    std::string left_weapon;
+    std::string dealt_damage;
+    std::vector<std::string> talismans;
+};
 
 struct LiveSnapshot {
     bool character_loaded = false;
@@ -32,6 +43,13 @@ struct LiveSnapshot {
     uint32_t last_grace_id = 0;
     std::string last_grace;
     std::string last_boss;
+    std::string last_killed;
+    std::optional<uint8_t> last_boss_hp_pct;
+    std::string last_boss_right_weapon;
+    std::string last_boss_left_weapon;
+    std::string last_boss_dealt_damage;
+    std::vector<std::string> last_boss_talismans;
+    std::map<std::string, BossDeathRecord> boss_death_best;
     std::vector<std::string> bosses_down;
     std::string location = "Unknown";
 };

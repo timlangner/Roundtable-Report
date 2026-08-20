@@ -1,9 +1,7 @@
 #include "game/progress.hpp"
 
 #include <algorithm>
-#include <array>
 #include <sstream>
-#include <utility>
 
 namespace erstats {
 namespace {
@@ -172,36 +170,6 @@ std::string grace_name_from_bonfire_id(uint32_t bonfire_id) {
         return it->name;
     }
     return {};
-}
-
-std::string last_boss_from_location(std::string_view location) {
-    if (location.empty() || location == "Unknown") {
-        return {};
-    }
-    static const std::array<std::pair<const char*, const char*>, 16> kHints = {{
-        {"Academy of Raya Lucaria", "Rennala, Queen of the Full Moon"},
-        {"Volcano Manor", "Rykard, Lord of Blasphemy"},
-        {"Miquella's Haligtree", "Malenia, Blade of Miquella"},
-        {"Crumbling Farum Azula", "Maliketh, the Black Blade"},
-        {"Stone Platform", "Elden Beast"},
-        {"Mohgwyn Palace", "Mohg, Lord of Blood"},
-        {"Castle Ensis", "Rellana, Twin Moon Knight"},
-        {"Belurat, Tower Settlement", "Divine Beast Dancing Lion"},
-        {"Enir-Ilim", "Radahn, Consort of Miquella"},
-        {"Midra's Manse", "Midra, Lord of Frenzied Flame"},
-        {"Finger Birthing Grounds", "Metyr, Mother of Fingers"},
-        {"Stone Coffin Fissure", "Putrescent Knight"},
-        {"Jagged Peak", "Bayle the Dread"},
-        {"Foot of the Jagged Peak", "Bayle the Dread"},
-        {"Shadow Keep", "Messmer the Impaler"},
-        {"Specimen Storehouse", "Messmer the Impaler"},
-    }};
-    for (const auto& [place, boss] : kHints) {
-        if (location == place) {
-            return boss;
-        }
-    }
-    return std::string(location);
 }
 
 std::vector<std::string> merge_bosses_down(

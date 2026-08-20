@@ -3,6 +3,8 @@
 #include "discord/payload.hpp"
 #include "util.hpp"
 
+#include <nlohmann/json.hpp>
+
 using namespace erstats;
 
 static RunSnapshot sample_snapshot() {
@@ -27,6 +29,10 @@ static RunSnapshot sample_snapshot() {
     snap.live.flasks = {12, 8, true};
     snap.live.last_grace = "Godrick the Grafted";
     snap.live.last_boss = "Godrick the Grafted";
+    snap.live.last_boss_hp_pct = 20;
+    snap.live.last_boss_right_weapon = "Claymore +0";
+    snap.live.last_boss_dealt_damage = "Claymore +0";
+    snap.live.last_killed = "Margit, the Fell Omen";
     snap.live.bosses_down = {"Margit, the Fell Omen", "Godrick the Grafted"};
     snap.updated_at = "2026-08-16T01:00:00Z";
     return snap;
@@ -109,4 +115,45 @@ TEST_CASE("webhook payload can attach a location map") {
     REQUIRE(json.find("attachment://location.png") != std::string::npos);
     REQUIRE(json.find("location.png") != std::string::npos);
     REQUIRE(json.find("https://") == std::string::npos);
+}
+
+TEST_CASE("webhook payload uses three stacked embeds") {
+    const auto json = nlohmann::json::parse(build_webhook_payload(sample_snapshot()));
+    REQUIRE(json["embeds"].size() == 3);
+    REQUIRE(json["embeds"][0]["title"] == "Game Profile: Wolf");
+    REQUIRE(json["embeds"][0]["color"] == 0x8B1E1E);
+    REQUIRE(json["embeds"][1]["title"] == "Last boss");
+    REQUIRE(json["embeds"][1]["description"] == "Godrick the Grafted");
+    REQUIRE(json["embeds"][1]["color"] == 0x8B1E1E);
+    REQUIRE(json["embeds"][2]["title"] == "Build & journey");
+    REQUIRE(json["embeds"][2]["color"] == 0x5C4A32);
+    const auto fields = json["embeds"][1]["fields"].dump();
+    REQUIRE(fields.find("Best try") != std::string::npos);
+    REQUIRE(fields.find("20% HP left") != std::string::npos);
+    REQUIRE(fields.find("Dealt damage") == std::string::npos);
+    REQUIRE(fields.find("Weapons") != std::string::npos);
+    REQUIRE(fields.find("Talismans") != std::string::npos);
+    REQUIRE(fields.find("No talismans") != std::string::npos);
+    REQUIRE(json["embeds"][2]["fields"].dump().find("Last killed") != std::string::npos);
+}
+
+TEST_CASE("webhook omits last boss embed when the field is empty") {
+    auto snap = sample_snapshot();
+    snap.live.last_boss.clear();
+    snap.live.in_boss_fight = false;
+    const auto json = nlohmann::json::parse(build_webhook_payload(snap));
+    REQUIRE(json["embeds"].size() == 2);
+    REQUIRE(json["embeds"][0]["title"] == "Game Profile: Wolf");
+    REQUIRE(json["embeds"][0]["color"] == 0xC3A456);
+    REQUIRE(json["embeds"][1]["title"] == "Build & journey");
+}
+
+TEST_CASE("webhook omits build embed when attributes bosses and last killed are empty") {
+    auto snap = sample_snapshot();
+    snap.live.last_boss.clear();
+    snap.live.last_killed.clear();
+    snap.live.stats = {};
+    snap.live.bosses_down.clear();
+    const auto json = nlohmann::json::parse(build_webhook_payload(snap));
+    REQUIRE(json["embeds"].size() == 1);
 }

@@ -7,8 +7,41 @@
 namespace erstats {
 namespace {
 
+nlohmann::json death_record_to_json(const BossDeathRecord& record) {
+    nlohmann::json out = {
+        {"encounter", record.encounter},
+        {"right_weapon", record.right_weapon},
+        {"left_weapon", record.left_weapon},
+        {"dealt_damage", record.dealt_damage},
+        {"talismans", record.talismans},
+    };
+    if (record.hp_pct) {
+        out["hp_pct"] = *record.hp_pct;
+    }
+    return out;
+}
+
+BossDeathRecord death_record_from_json(const nlohmann::json& j) {
+    BossDeathRecord record;
+    record.encounter = j.value("encounter", "");
+    record.right_weapon = j.value("right_weapon", "");
+    record.left_weapon = j.value("left_weapon", "");
+    record.dealt_damage = j.value("dealt_damage", "");
+    if (j.contains("talismans") && j["talismans"].is_array()) {
+        record.talismans = j["talismans"].get<std::vector<std::string>>();
+    }
+    if (j.contains("hp_pct") && j["hp_pct"].is_number()) {
+        record.hp_pct = j["hp_pct"].get<uint8_t>();
+    }
+    return record;
+}
+
 nlohmann::json to_json(const RunSnapshot& snapshot) {
-    return nlohmann::json{
+    nlohmann::json best = nlohmann::json::object();
+    for (const auto& [name, record] : snapshot.live.boss_death_best) {
+        best[name] = death_record_to_json(record);
+    }
+    nlohmann::json j = nlohmann::json{
         {"run_key", snapshot.identity.key()},
         {"steam_id", snapshot.identity.steam_id},
         {"save_filename", snapshot.identity.save_filename},
@@ -44,12 +77,22 @@ nlohmann::json to_json(const RunSnapshot& snapshot) {
         {"last_grace_id", snapshot.live.last_grace_id},
         {"last_grace", snapshot.live.last_grace},
         {"last_boss", snapshot.live.last_boss},
+        {"last_killed", snapshot.live.last_killed},
+        {"last_boss_right_weapon", snapshot.live.last_boss_right_weapon},
+        {"last_boss_left_weapon", snapshot.live.last_boss_left_weapon},
+        {"last_boss_dealt_damage", snapshot.live.last_boss_dealt_damage},
+        {"last_boss_talismans", snapshot.live.last_boss_talismans},
         {"bosses_down", snapshot.live.bosses_down},
         {"location", snapshot.live.location},
         {"character_loaded", snapshot.live.character_loaded},
         {"discord_message_id", snapshot.discord_message_id},
         {"updated_at", snapshot.updated_at},
+        {"boss_death_best", std::move(best)},
     };
+    if (snapshot.live.last_boss_hp_pct) {
+        j["last_boss_hp_pct"] = *snapshot.live.last_boss_hp_pct;
+    }
+    return j;
 }
 
 }  // namespace
@@ -106,6 +149,36 @@ std::optional<RunSnapshot> snapshot_from_json(std::string_view json) {
         snap.live.last_grace_id = j.value("last_grace_id", 0u);
         snap.live.last_grace = j.value("last_grace", "");
         snap.live.last_boss = j.value("last_boss", "");
+        snap.live.last_killed = j.value("last_killed", "");
+        snap.live.last_boss_right_weapon = j.value("last_boss_right_weapon", "");
+        snap.live.last_boss_left_weapon = j.value("last_boss_left_weapon", "");
+        snap.live.last_boss_dealt_damage = j.value("last_boss_dealt_damage", "");
+        if (j.contains("last_boss_hp_pct") && j["last_boss_hp_pct"].is_number()) {
+            snap.live.last_boss_hp_pct = j["last_boss_hp_pct"].get<uint8_t>();
+        }
+        if (j.contains("last_boss_talismans") && j["last_boss_talismans"].is_array()) {
+            snap.live.last_boss_talismans = j["last_boss_talismans"].get<std::vector<std::string>>();
+        }
+        if (j.contains("boss_death_best") && j["boss_death_best"].is_object()) {
+            for (auto it = j["boss_death_best"].begin(); it != j["boss_death_best"].end(); ++it) {
+                if (!it.value().is_object()) {
+                    continue;
+                }
+                const auto& rec = it.value();
+                BossDeathRecord record;
+                record.encounter = rec.value("encounter", "");
+                record.right_weapon = rec.value("right_weapon", "");
+                record.left_weapon = rec.value("left_weapon", "");
+                record.dealt_damage = rec.value("dealt_damage", "");
+                if (rec.contains("talismans") && rec["talismans"].is_array()) {
+                    record.talismans = rec["talismans"].get<std::vector<std::string>>();
+                }
+                if (rec.contains("hp_pct") && rec["hp_pct"].is_number()) {
+                    record.hp_pct = rec["hp_pct"].get<uint8_t>();
+                }
+                snap.live.boss_death_best[it.key()] = std::move(record);
+            }
+        }
         if (j.contains("bosses_down") && j["bosses_down"].is_array()) {
             snap.live.bosses_down = j["bosses_down"].get<std::vector<std::string>>();
         }
