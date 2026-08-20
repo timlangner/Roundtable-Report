@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -B build -A x64
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Pack
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          New-Item -ItemType Directory -Force -Path pack/natives/maps | Out-Null
+          Copy-Item dist/EldenRing_StatsShare.me3 pack/
+          Copy-Item dist/natives/EldenRing_StatsShare.dll pack/natives/
+          Copy-Item dist/EldenRing_StatsShare.toml pack/natives/
+          Copy-Item assets/maps/* pack/natives/maps/
+          tar -a -c -f "Roundtable-Report-$tag.zip" -C pack .
+      - name: Publish
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Roundtable-Report-${{ github.ref_name }}.zip
